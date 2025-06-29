@@ -11,6 +11,10 @@ from db.db_session import get_db
 from models.scan_model import Escaneo
 from datetime import datetime
 
+from routes import scan_ocr
+app.include_router(scan_ocr.router)
+
+
 router = APIRouter()
 
 
