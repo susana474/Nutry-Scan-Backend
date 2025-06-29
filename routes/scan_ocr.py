@@ -11,6 +11,8 @@ from db.db_session import get_db
 from models.scan_model import Escaneo
 from datetime import datetime
 
+
+
 router = APIRouter()
 
 
@@ -195,26 +197,30 @@ async def procesar_en_background(escaneo_id: int, usuario_id: int, files_data: l
         db.close()
 
 
-@router.get("/scan/status/{escaneo_id}")
-async def obtener_estado_escaneo(escaneo_id: int, db: Session = Depends(get_db)):
-    """Consulta el estado de un escaneo en background"""
+@router.get("/scan/detalle/{escaneo_id}")
+async def obtener_detalle_escaneo(escaneo_id: int, db: Session = Depends(get_db)):
+    # Buscar escaneo y usuario
     escaneo = db.query(Escaneo).filter(Escaneo.id == escaneo_id).first()
-
     if not escaneo:
         raise HTTPException(status_code=404, detail="Escaneo no encontrado")
-
-    # Determinar estado
-    if isinstance(escaneo.datos, dict) and escaneo.datos.get("status") == "processing":
-        status = "processing"
-    elif isinstance(escaneo.datos, dict) and escaneo.datos.get("status") == "error":
-        status = "error"
-    else:
-        status = "completed"
+    usuario = db.query(Usuario).filter(Usuario.id == escaneo.usuario_id).first()
+    if not usuario:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
 
     return {
-        "id": escaneo.id,
-        "status": status,
-        "datos": escaneo.datos,
+        "scan_id": escaneo.id,
+        "fecha": escaneo.fecha,
+        "resultado_scan": escaneo.datos,
         "imagenes": escaneo.imagenes,
-        "fecha": escaneo.fecha
+        # Datos del usuario:
+        "usuario": {
+            "id": usuario.id,
+            "nombre": usuario.nombre,
+            "plan": usuario.plan,
+            "peso": usuario.peso,
+            "altura": usuario.altura,
+            "enfermedad": usuario.enfermedad,
+            "correo": usuario.correo,
+            # ...lo que necesites mostrar...
+        }
     }
